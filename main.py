@@ -4,6 +4,10 @@ import numpy as np
 import urllib3
 import requests
 
+import shutil
+
+import time
+
 from PIL import Image
 from io import StringIO
 
@@ -21,23 +25,24 @@ def read_map(curr_map, left='False'):
     circles = cv.HoughCircles(map,cv.HOUGH_GRADIENT,1,20,param1=50,param2=13,minRadius=11,maxRadius=13)
 
     map = cv.cvtColor(map, cv.COLOR_GRAY2RGB)
-    print(circles)
 
     circles = np.uint16(np.around(circles))
-    for i in circles[0, :]:
-        # draw the outer circle
-        cv.circle(map, (i[0], i[1]), i[2], (0, 255, 0), 2)
+    # for i in circles[0, :]:
+    #     # draw the outer circle
+    #     cv.circle(map, (i[0], i[1]), i[2], (0, 255, 0), 2)
+    #
+    # cv.imshow('Map', map)
+    # cv.waitKey(0)
 
-    cv.imshow('Map', map)
-    cv.waitKey(0)
+    return circles[0,:,:2]
 
 
 def fetch_images(champion_names):
     for champion_name in champion_names:
         url = "http://ddragon.leagueoflegends.com/cdn/7.11.1/img/champion/"+champion_name+".png"
-        r = requests.get(url)
-        cv.imshow('Map', r.text)
-        cv.waitKey(0)
+        response = requests.get(url, stream=True)
+        with open(champion_name+'.png', 'wb') as out_file:
+            shutil.copyfileobj(response.raw, out_file)
 
 
 def fetch_champions():
@@ -54,15 +59,44 @@ def fetch_champions():
     champs = dict(r.json()['data'])
     champ_names = []
     for champ in champs:
-        champ_names.append(champs[champ]['name'])
+        champ_names.append(champs[champ]['key'])
 
     return champ_names
 
-curr_map = 'images/img1.png'
-#read_map(curr_map)
 
-champions = fetch_champions()
-images = fetch_images(champions)
+def circular_crop(image_name):
+    image = cv.imread(image_name, cv.IMREAD_COLOR)
+
+    radius = int(image.shape[0]/2)
+    x = int(image.shape[0]/2)
+    y = int(image.shape[1]/2)
+    origin = (0,0)
+
+    crop = np.zeros(image.shape)
+    # length = 100
+    # theta = np.linspace(0, 2*np.pi, length)
+    # x_s = int([np.cos(t) for t in theta])
+    # y_s = int([np.sin(t) for t in theta])
+
+
+    for x in range(image.shape[0]):
+        for y in range(image.shape[1]):
+            if (x-radius) ** 2 + (y-radius) ** 2 <= radius ** 2:
+                crop[x,y,:] = image[x,y,:]
+            else:
+                crop[x,y,:] = 0
+
+    cv.imshow('penisão', crop)
+    cv.waitKey(0)
+
+
+curr_map = 'images/img1.png'
+read_map(curr_map)
+
+circular_crop('Riven.png')
+
+#champions = fetch_champions()
+#images = fetch_images(champions)
 
 
 
