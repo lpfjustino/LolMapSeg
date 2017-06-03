@@ -16,15 +16,15 @@ def read_map(curr_map, left='False'):
     gs_map = cv.cvtColor(map, cv.COLOR_BGR2GRAY)
     gs_map = cv.equalizeHist(gs_map)
 
-    circles = cv.HoughCircles(gs_map,cv.HOUGH_GRADIENT,1,20,param1=50,param2=13,minRadius=11,maxRadius=13)
+    circles = cv.HoughCircles(gs_map,cv.HOUGH_GRADIENT,1,20,param1=50,param2=13,minRadius=9,maxRadius=13)
 
     circles = np.uint16(np.around(circles))
-    # for i in circles[0, :]:
-    #     # draw the outer circle
-    #     cv.circle(map, (i[0], i[1]), i[2], (0, 255, 0), 2)
-    #
-    # cv.imshow('Map', map)
-    # cv.waitKey(0)
+    for i in circles[0, :]:
+        # draw the outer circle
+        cv.circle(map, (i[0], i[1]), i[2], (0, 255, 0), 2)
+
+    cv.imshow('Map', map)
+    cv.waitKey(0)
 
     return circles[0,:,:2], map
 
@@ -85,23 +85,15 @@ def find_champions(map, circles, all_champs):
 
             err = cv.compareHist(champ_hist, candidate_hist,cv.HISTCMP_CHISQR)
 
-            print(err)
-
             diffs.append(err)
 
-        print(diffs)
         print('>',min(diffs))
         i = np.argmin(diffs)
         print(all_champs[i]['name'])
-        time.sleep(10)
-
-        print(diffs)
-
 
 
 def load_champions_images():
     all_champs = fetch_champions()
-    # all_champs = ['Fiora', 'Fizz']
     base = []
 
     for champ in all_champs:
@@ -110,13 +102,13 @@ def load_champions_images():
 
     return base
 
-curr_map = 'images/img1.png'
+curr_map = 'images/tst.png'
 
 circles, map = read_map(curr_map)
 
 all_champs = load_champions_images()
 # find_champions(map, circles, all_champs)
-find_champions(map, circles[2:], all_champs)
+find_champions(map, circles, all_champs)
 # champions = fetch_champions()
 #images = fetch_images(champions)
 
