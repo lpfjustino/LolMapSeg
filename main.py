@@ -71,11 +71,19 @@ def find_champions(map, circles, all_champs):
         # 1 and 0 because the circles' centers are respectively y and x
         candidate = map[circle[1]-res:circle[1]+res, circle[0]-res:circle[0]+res]
         candidate = circular_crop_map(candidate)
-        diff = []
-        for champ in all_champs:
-            diff.append(cv.subtract(candidate, champ))
+        diffs = np.zeros(len(all_champs), dtype=np.float)
 
-        print(diff)
+        cv.imshow('a',candidate)
+        cv.waitKey(0)
+        for champ in all_champs:
+            cv.imshow('a',champ['crop'])
+            cv.waitKey(0)
+            diff = sum(cv.subtract(candidate, champ['crop']))
+            print(diff)
+            np.append(diffs,diff)
+            time.sleep(2)
+
+        print(diffs)
 
 
 
