@@ -12,7 +12,6 @@ import time
 def read_map(curr_map, left='False'):
     map_res = [200, 200]
     map = cv.imread(curr_map, cv.IMREAD_COLOR)[-map_res[0]:,:map_res[1],:]
-    base_map = cv.imread('images/base_map.png', cv.IMREAD_COLOR)
 
     gs_map = cv.cvtColor(map, cv.COLOR_BGR2GRAY)
     gs_map = cv.equalizeHist(gs_map)
@@ -33,7 +32,6 @@ def read_map(curr_map, left='False'):
 
 def circular_crop_champ(image_name):
     image = cv.imread(image_name, cv.IMREAD_COLOR)
-
     radius = int(image.shape[0]/2)
 
     for x in range(image.shape[0]):
@@ -71,17 +69,31 @@ def find_champions(map, circles, all_champs):
         # 1 and 0 because the circles' centers are respectively y and x
         candidate = map[circle[1]-res:circle[1]+res, circle[0]-res:circle[0]+res]
         candidate = circular_crop_map(candidate)
-        diffs = np.zeros(len(all_champs), dtype=np.float)
+        diffs = []
 
-        cv.imshow('a',candidate)
-        cv.waitKey(0)
-        for champ in all_champs:
-            cv.imshow('a',champ['crop'])
-            cv.waitKey(0)
-            diff = sum(cv.subtract(candidate, champ['crop']))
-            print(diff)
-            np.append(diffs,diff)
-            time.sleep(2)
+        # cv.imshow('a',candidate)
+        # cv.waitKey(0)
+        for i, champ in enumerate(all_champs):
+            # cv.imshow('a',champ['crop'])
+            # cv.waitKey(0)
+
+            gs_champ = cv.cvtColor(champ['crop'], cv.COLOR_BGR2GRAY)
+            gs_candidate = cv.cvtColor(candidate, cv.COLOR_BGR2GRAY)
+
+            champ_hist = cv.calcHist([gs_champ],[0],None,[256],[0,256])
+            candidate_hist = cv.calcHist([gs_candidate],[0],None,[256],[0,256])
+
+            err = cv.compareHist(champ_hist, candidate_hist,cv.HISTCMP_CHISQR)
+
+            print(err)
+
+            diffs.append(err)
+
+        print(diffs)
+        print('>',min(diffs))
+        i = np.argmin(diffs)
+        print(all_champs[i]['name'])
+        time.sleep(10)
 
         print(diffs)
 
@@ -89,6 +101,7 @@ def find_champions(map, circles, all_champs):
 
 def load_champions_images():
     all_champs = fetch_champions()
+    # all_champs = ['Fiora', 'Fizz']
     base = []
 
     for champ in all_champs:
@@ -102,7 +115,8 @@ curr_map = 'images/img1.png'
 circles, map = read_map(curr_map)
 
 all_champs = load_champions_images()
-find_champions(map, circles, all_champs)
+# find_champions(map, circles, all_champs)
+find_champions(map, circles[2:], all_champs)
 # champions = fetch_champions()
 #images = fetch_images(champions)
 
