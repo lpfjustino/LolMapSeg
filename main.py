@@ -14,27 +14,22 @@ from io import StringIO
 def read_map(curr_map, left='False'):
     map_res = [200, 200]
     map = cv.imread(curr_map, cv.IMREAD_COLOR)[-map_res[0]:,:map_res[1],:]
-    #map = np.float32(map)
-
-    #map = cv.imread(curr_map, cv.IMREAD_GRAYSCALE)[-map_res[0]:,:map_res[1]]
     base_map = cv.imread('images/base_map.png', cv.IMREAD_COLOR)
 
-    map = cv.cvtColor(map, cv.COLOR_BGR2GRAY)
-    map = cv.equalizeHist(map)
+    gs_map = cv.cvtColor(map, cv.COLOR_BGR2GRAY)
+    gs_map = cv.equalizeHist(gs_map)
 
-    circles = cv.HoughCircles(map,cv.HOUGH_GRADIENT,1,20,param1=50,param2=13,minRadius=11,maxRadius=13)
-
-    map = cv.cvtColor(map, cv.COLOR_GRAY2RGB)
+    circles = cv.HoughCircles(gs_map,cv.HOUGH_GRADIENT,1,20,param1=50,param2=13,minRadius=11,maxRadius=13)
 
     circles = np.uint16(np.around(circles))
-    # for i in circles[0, :]:
-    #     # draw the outer circle
-    #     cv.circle(map, (i[0], i[1]), i[2], (0, 255, 0), 2)
-    #
-    # cv.imshow('Map', map)
-    # cv.waitKey(0)
+    for i in circles[0, :]:
+        # draw the outer circle
+        cv.circle(map, (i[0], i[1]), i[2], (0, 255, 0), 2)
 
-    return circles[0,:,:2]
+    cv.imshow('Map', map)
+    cv.waitKey(0)
+
+    return circles[0,:,:2], map
 
 
 def fetch_images(champion_names):
@@ -70,31 +65,38 @@ def circular_crop(image_name):
     radius = int(image.shape[0]/2)
     x = int(image.shape[0]/2)
     y = int(image.shape[1]/2)
-    origin = (0,0)
 
-    crop = np.zeros(image.shape)
-    # length = 100
-    # theta = np.linspace(0, 2*np.pi, length)
-    # x_s = int([np.cos(t) for t in theta])
-    # y_s = int([np.sin(t) for t in theta])
-
+    crop = np.zeros((20,20,3))
 
     for x in range(image.shape[0]):
         for y in range(image.shape[1]):
-            if (x-radius) ** 2 + (y-radius) ** 2 <= radius ** 2:
-                crop[x,y,:] = image[x,y,:]
-            else:
-                crop[x,y,:] = 0
+            if (x-radius) ** 2 + (y-radius) ** 2 > radius ** 2:
+                image[x, y, :] = 0
 
-    cv.imshow('penisão', crop)
-    cv.waitKey(0)
+    image = cv.resize(image, (0, 0), fx=1/5, fy=1/5)
+    # cv.imshow('penisão', image)
+    # cv.waitKey(0)
 
+    return image
+
+def find_champions(map, circles):
+    # cv.imshow('mapa', map)
+    # cv.waitKey(0)
+
+    res = 12
+    champ_candidates = []
+    for circle in circles:
+        champ_candidates.append(map[circle[1]-res:circle[1]+res, circle[0]-res:circle[0]+res])
+
+    print(champ_candidates)
 
 curr_map = 'images/img1.png'
-read_map(curr_map)
 
-circular_crop('Riven.png')
+circles, map = read_map(curr_map)
 
+crop = circular_crop('Riven.png')
+
+find_champions(map, circles)
 #champions = fetch_champions()
 #images = fetch_images(champions)
 
