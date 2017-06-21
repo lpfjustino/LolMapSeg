@@ -9,6 +9,32 @@ import shutil
 
 import time
 
+
+'''
+    Legacy function that used Hough method to identify the champions' portraits
+'''
+def read_map_hough(curr_map, left='False'):
+    map_res = [200, 200]
+    map = cv.imread(curr_map, cv.IMREAD_COLOR)[-map_res[0]:,:map_res[1],:]
+
+    gs_map = cv.cvtColor(map, cv.COLOR_BGR2GRAY)
+    gs_map = cv.equalizeHist(gs_map)
+
+    circles = cv.HoughCircles(gs_map,cv.HOUGH_GRADIENT,1,20,param1=50,param2=13,minRadius=9,maxRadius=13)
+
+    circles = np.uint16(np.around(circles))
+    for i in circles[0, :]:
+        # draw the outer circle
+        cv.circle(map, (i[0], i[1]), i[2], (0, 255, 0), 2)
+
+    cv.imshow('Map', map)
+    cv.waitKey(0)
+
+    return circles[0,:,:2], map
+
+'''
+    Uses template matching in order to identify the champions' portraits
+'''
 def read_map(curr_map, left='False'):
     map_res = [200, 200]
     map = cv.imread(curr_map, cv.IMREAD_COLOR)[-map_res[0]:,:map_res[1],:]
